@@ -30,9 +30,9 @@ function App() {
     <AppRoot>
       <Router>
         <AppRoot>
-          <header>
+          {/* <header>
             <Header />
-          </header>
+          </header> */}
 
           <ButtonsTypography />
 
