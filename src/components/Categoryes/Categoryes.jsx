@@ -7,7 +7,7 @@ import "./Categoryes.css";
 function Categoryes() {
   return (
     <>
-      <div className="genn-Categoryes-title  ">{LocalText.Categoryes.title}</div>
+      <div className="genn-Categoryes-title text-[#000]  ">{LocalText.Categoryes.title}</div>
       <ul className="genn-Categoryes-menu font-face-gm">
         <li className="genn-Categoryes-link">
           {LocalText.Categoryes.CategoryesLinks.l1}

@@ -15,6 +15,9 @@
     text-align: center;
     margin-bottom: 203px;
 }
+.genn-SliderBaner-text-title {
+    letter-spacing: -2px;
+}
 .genn-SliderBaner-image-container {
     justify-content: space-between;
 }

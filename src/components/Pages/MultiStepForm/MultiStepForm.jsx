@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./MultiStepForm.css"; // Ensure to include your CSS styles
 import kitchenico from "../../../assets/images/ico/menu/kuhna-1-b.svg";
 import kitchenicoW from "../../../assets/images/ico/menu/kuhna-2-w.svg";
@@ -10,18 +10,37 @@ import zona from "../../../assets/images/ico/menu/r-zona-1-b.svg";
 import zonaw from "../../../assets/images/ico/menu/r-zona-2-w.svg";
 import nextb from "../../../assets/images/ico/Buttons/next-1.svg";
 import nextw from "../../../assets/images/ico/Buttons/next-2.svg";
+import close from "../../../assets/images/ico/Buttons/closeIco2.svg";
+import InputMask from "react-input-mask"; // Import the InputMask component
+import axios from "axios";
+
 const MultiStepForm = ({ isModalOpen, closeModal }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     product: [],
     layout: "",
-    dimensions: { width: "", height: "", depth: "" },
-    materials: "",
+    dimensions: { width: "" },
+    materials: { material: "" },
     callback: { name: "", phone: "" },
   });
   const [error, setError] = useState(""); // To store error messages
 
-  // Handle navigation
+  const handlePhoneChange = (value) => {
+    clearError(); // Clear error when updating phone number
+    setFormData({
+      ...formData,
+      callback: { ...formData.callback, phone: value },
+    });
+  };
+
+  // Clear the error when interacting with inputs
+  const clearError = () => {
+    if (error) {
+      setError(""); // Clear any existing error
+    }
+  };
+
+  // Navigate to next step
   const nextStep = () => {
     if (validateStep()) {
       setCurrentStep((prev) => prev + 1);
@@ -29,10 +48,15 @@ const MultiStepForm = ({ isModalOpen, closeModal }) => {
     }
   };
 
-  const prevStep = () => setCurrentStep((prev) => prev - 1);
+  // Navigate to previous step
+  const prevStep = () => {
+    setCurrentStep((prev) => prev - 1);
+    setError(""); // Clear any existing errors when going back
+  };
 
   // Update form data
   const updateFormData = (field, value) => {
+    clearError(); // Clear error on any field update
     setFormData((prev) => ({
       ...prev,
       ...field,
@@ -41,236 +65,274 @@ const MultiStepForm = ({ isModalOpen, closeModal }) => {
 
   // Validate form for each step
   const validateStep = () => {
-    if (currentStep === 1 && formData.product.length === 0) {
-      setError("Пожалуйста, выберите хотя бы одно изделие.");
+    let errorMessage = ""; // Default error message is empty
+
+    switch (currentStep) {
+      case 1:
+        if (formData.product.length === 0) {
+          errorMessage = "Пожалуйста, выберите хотя бы одно изделие.";
+        }
+        break;
+      case 2:
+        if (!formData.dimensions.width) {
+          errorMessage = "Пожалуйста, укажите размеры.";
+        }
+        break;
+      case 3:
+        if (!formData.materials.material) {
+          errorMessage = "Пожалуйста, укажите материалы.";
+        }
+        break;
+      case 4:
+        if (!formData.callback.phone) {
+          errorMessage = "Пожалуйста, укажите ваш номер телефона.";
+        }
+        break;
+      default:
+        errorMessage = "";
+    }
+
+    if (errorMessage) {
+      setError(errorMessage); // Set the error message if there's an issue
       return false;
     }
-    if (
-      currentStep === 2 &&
-      (!formData.dimensions.width ||
-        !formData.dimensions.height ||
-        !formData.dimensions.depth)
-    ) {
-      setError("Пожалуйста, укажите размеры.");
-      return false;
-    }
-    if (currentStep === 3 && !formData.materials) {
-      setError("Пожалуйста, укажите материалы.");
-      return false;
-    }
-    if (currentStep === 4 && !formData.callback.phone) {
-      setError("Пожалуйста, укажите ваш номер телефона.");
-      return false;
-    }
-    return true;
+
+    return true; // Validation passed
   };
 
   // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateStep()) {
-      // Perform form submission (e.g., send data to the server or display it)
-      console.log("Form Submitted Successfully", formData);
+      try {
+        // Send formData to the API using axios
+        const response = await axios.get(
+          "https://l.okdeal.ru/api/send/",
+          formData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+              "Cache-Control": "no-cache", // Better cache control header value
+              "X-Requested-With": "XMLHttpRequest",
+            },
+          }
+        );
 
-      // Close the modal after submission
-      closeModal();
+        // Log the full response for debugging
+        console.log("Full response:", response);
 
-      // Reset form data if needed
-      setFormData({
-        product: [],
-        layout: "",
-        dimensions: { width: "", height: "", depth: "" },
-        materials: "",
-        callback: { name: "", phone: "" },
-      });
+        // Check if the response is successful (status 200)
+        if (response.status === 200 && response.data.success) {
+          console.log("Form Submitted Successfully", formData);
+          closeModal(); // Close the modal after submission
 
-      // Optionally reset the current step to the first step if you want the form to restart
-      setCurrentStep(1);
+          // Reset the form state after successful submission
+          setFormData({
+            product: [],
+            layout: "",
+            dimensions: { width: "" },
+            materials: { material: "" },
+            callback: { name: "", phone: "" },
+          });
+          setCurrentStep(1); // Reset to the first step
+        } else {
+          throw new Error("Ошибка отправки данных на сервер.");
+        }
+      } catch (error) {
+        // Handle any errors that occur during the API call
+        console.log("Error response:", error.response); // Log the error response
+        setError(
+          error.response
+            ? error.response.data.message || "Ошибка отправки данных на сервер."
+            : "Ошибка отправки данных на сервер."
+        );
+      }
     }
   };
 
-  // Step content rendering
+  // Render step content based on the current step
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="ModelWindow-1-step1">
+          <div className="ModelWindow-1-step1 text-[#000]">
             <h2 className="ModelWindow-1">Какое изделие вы хотите заказать?</h2>
             <div className="ModelWindow-4">
-              <div
-                className={`product-option ${
-                  formData.product.includes("Кухня") ? "selected" : ""
-                }`}
-                onClick={() => handleProductSelection("Кухня")}
-              >
-                <div>
-                  <img
-                    src={
-                      !formData.product.includes("Кухня")
-                        ? kitchenico
-                        : kitchenicoW
-                    }
-                    alt="kitchenico"
-                  />
-                </div>
-                <div className="product-option-text">Кухня</div>
-              </div>
-              <div
-                className={`product-option ${
-                  formData.product.includes("Шкаф") ? "selected" : ""
-                }`}
-                onClick={() => handleProductSelection("Шкаф")}
-              >
-                <div>
-                  <img
-                    src={
-                      !formData.product.includes("Шкаф") ? shkadico : shkaficow
-                    }
-                    alt="kitchenico"
-                  />
-                </div>
-                <div className="product-option-text"> Шкаф</div>
-              </div>
-              <div
-                className={`product-option ${
-                  formData.product.includes("Гардеробная") ? "selected" : ""
-                }`}
-                onClick={() => handleProductSelection("Гардеробная")}
-              >
-                <div>
-                  <img
-                    src={
-                      !formData.product.includes("Гардеробная")
-                        ? prihozaia
-                        : prihozaiaw
-                    }
-                    alt="kitchenico"
-                  />
-                </div>
-                <div className="product-option-text">Гардеробная</div>
-              </div>
-              <div
-                className={`product-option ${
-                  formData.product.includes("Рабочая зона") ? "selected" : ""
-                }`}
-                onClick={() => handleProductSelection("Рабочая зона")}
-              >
-                <div>
-                  <img
-                    src={
-                      !formData.product.includes("Рабочая зона") ? zona : zonaw
-                    }
-                    alt="zone"
-                  />
-                </div>
-                <div className="product-option-text"> Рабочая зона</div>
-              </div>
-              <div
-                className={` product-option-other product-option ${
-                  formData.product.includes("Другое") ? "selected" : ""
-                }`}
-                onClick={() => handleProductSelection("Другое")}
-              >
-                <div className="product-option-text"> Другое</div>
-              </div>
+              {["Кухня", "Шкаф", "Гардеробная", "Рабочая зона", "Другое"].map(
+                (product) => (
+                  <div
+                    key={product}
+                    className={`product-option ${
+                      formData.product.includes(product) ? "selected" : ""
+                    }`}
+                    onClick={() => handleProductSelection(product)}
+                  >
+                    <div>
+                      <img
+                        src={
+                          formData.product.includes(product)
+                            ? getImageForProduct(product, true)
+                            : getImageForProduct(product, false)
+                        }
+                        alt={product}
+                      />
+                    </div>
+                    <div className="product-option-text">{product}</div>
+                  </div>
+                )
+              )}
             </div>
           </div>
         );
-
       case 2:
         return (
-          <>
+          <div>
             <h2 className="ModelWindow-1">Есть ли размеры?</h2>
-            <div>
-              <input
-                type="text"
-                placeholder="Ширина"
-                value={formData.dimensions.width}
-                onChange={(e) =>
-                  updateFormData({
-                    dimensions: {
-                      ...formData.dimensions,
-                      width: e.target.value,
-                    },
-                  })
-                }
-              />
-              <input
-                type="text"
-                placeholder="Высота"
-                value={formData.dimensions.height}
-                onChange={(e) =>
-                  updateFormData({
-                    dimensions: {
-                      ...formData.dimensions,
-                      height: e.target.value,
-                    },
-                  })
-                }
-              />
-              <input
-                type="text"
-                placeholder="Глубина"
-                value={formData.dimensions.depth}
-                onChange={(e) =>
-                  updateFormData({
-                    dimensions: {
-                      ...formData.dimensions,
-                      depth: e.target.value,
-                    },
-                  })
-                }
-              />
+            <textarea
+              placeholder="Ширина"
+              className="text-[#000]"
+              value={formData.dimensions.width}
+              onFocus={clearError} // Clear error on focus
+              onChange={(e) =>
+                updateFormData({
+                  dimensions: { ...formData.dimensions, width: e.target.value },
+                })
+              }
+            />
+            <div
+              className={`product-option ${
+                formData.dimensions.width === "Требуется замер"
+                  ? "selected"
+                  : ""
+              }`}
+              onClick={() => {
+                clearError(); // Clear error when clicking this option
+                setFormData((prevState) => ({
+                  ...prevState,
+                  dimensions: {
+                    ...prevState.dimensions,
+                    width:
+                      prevState.dimensions.width === "Требуется замер"
+                        ? ""
+                        : "Требуется замер", // Toggle logic
+                  },
+                }));
+              }}
+            >
+              <div className="product-option-text">Требуется замер</div>
             </div>
-          </>
+          </div>
         );
-
       case 3:
         return (
-          <>
+          <div>
             <h2 className="ModelWindow-1">Из каких материалов?</h2>
-            <input
-              type="text"
+            <textarea
               placeholder="Введите материалы"
-              value={formData.materials}
-              onChange={(e) => updateFormData({ materials: e.target.value })}
+              className="text-[#000]"
+              value={formData.materials.material}
+              onFocus={clearError} // Clear error on focus
+              onChange={(e) =>
+                updateFormData({
+                  materials: {
+                    ...formData.materials,
+                    material: e.target.value,
+                  },
+                })
+              }
             />
-          </>
+            <div
+              className={`product-option ${
+                formData.materials.material === "Требуется замер"
+                  ? "selected"
+                  : ""
+              }`}
+              onClick={() => {
+                clearError(); // Clear error when clicking this option
+                setFormData((prevState) => ({
+                  ...prevState,
+                  materials: {
+                    ...prevState.materials,
+                    material:
+                      prevState.materials.material === "Требуется замер"
+                        ? ""
+                        : "Требуется замер", // Toggle logic
+                  },
+                }));
+              }}
+            >
+              <div className="product-option-text">Требуется замер</div>
+            </div>
+          </div>
         );
-
       case 4:
         return (
-          <>
+          <div className="ModelWindow-1-con">
             <h2 className="ModelWindow-1">Ваши данные для связи</h2>
             <input
               type="text"
-              placeholder="Ваше имя"
+              className="text-[#000]"
+              placeholder={"Имя:"}
+              style={{ fontFamily: "monospace", fontSize: "16px" }}
               value={formData.callback.name}
+              onFocus={clearError} // Clear error on focus
               onChange={(e) =>
                 updateFormData({
                   callback: { ...formData.callback, name: e.target.value },
                 })
               }
             />
-            <input
-              type="text"
-              placeholder="Ваш телефон"
-              value={formData.callback.phone}
-              onChange={(e) =>
-                updateFormData({
-                  callback: { ...formData.callback, phone: e.target.value },
-                })
-              }
-            />
-          </>
-        );
 
+            <InputMask
+              mask="+7(999)999-99-99"
+              className="[#000]"
+              value={formData.callback.phone}
+              onFocus={clearError} // Clear error on focus
+              onChange={(e) => handlePhoneChange(e.target.value)}
+              maskChar="_"
+            >
+              {(inputProps) => (
+                <input
+                  {...inputProps}
+                  type="text"
+                  placeholder="+7(___)___-__-__"
+                  value={formData.callback.phone}
+                />
+              )}
+            </InputMask>
+            <div className="ModelWindow-6-button-container">
+              <button className="ModelWindow-6" onClick={handleSubmit}>
+                Узнать стоимость
+              </button>
+            </div>
+          </div>
+        );
       default:
         return <h2 className="ModelWindow-1">Форма завершена! Спасибо!</h2>;
     }
   };
 
+  // Get image based on the product type and selection state
+  const getImageForProduct = (product, selected) => {
+    switch (product) {
+      case "Кухня":
+        return selected ? kitchenicoW : kitchenico;
+      case "Шкаф":
+        return selected ? shkaficow : shkadico;
+      case "Гардеробная":
+        return selected ? prihozaiaw : prihozaia;
+      case "Рабочая зона":
+        return selected ? zonaw : zona;
+      case "Другое":
+        return selected ? kitchenicoW : kitchenico; // Use default image for "Other"
+      default:
+        return kitchenico;
+    }
+  };
+
   // Handle product selection (toggle selection of products)
   const handleProductSelection = (product) => {
+    clearError(); // Clear error on product selection
     const isSelected = formData.product.includes(product);
     if (isSelected) {
       setFormData((prev) => ({
@@ -290,10 +352,10 @@ const MultiStepForm = ({ isModalOpen, closeModal }) => {
 
   return (
     isModalOpen && (
-      <div id="ModelWindow" className="overlay">
+      <div id="ModelWindow" className="overlay multform">
         <div className="conteniner gemm-ModelWindow">
           <button className="close" onClick={closeModal}>
-            ×
+            <img src={close} alt="close" />
           </button>
           <div className="step-content">{renderStep()}</div>
           {error && <p className="error-message">{error}</p>}
@@ -304,23 +366,23 @@ const MultiStepForm = ({ isModalOpen, closeModal }) => {
                 style={{ width: `${progressWidth}%` }}
               ></div>
             </div>
-            {currentStep === 4 ? (
-              <button className="ModelWindow-6" onClick={handleSubmit}>
-                Отправить
-              </button>
-            ) : (
-              <div className="ModelWindow-44-buttonContainer">
-                <button className="ModelWindow-button-5" onClick={prevStep}>
-                  <img src={nextw} />
-                </button>
-                <button className="ModelWindow-button-6" onClick={nextStep}>
-                  <img src={nextb} />
-                </button>
-              </div>
-            )}
-          </div>
 
-          {/* Progress Tape at the bottom */}
+            <div className="ModelWindow-44-buttonContainer">
+              <button
+                className="ModelWindow-button-5"
+                onClick={currentStep !== 1 ? prevStep : () => {}}
+              >
+                <img src={nextw} />
+              </button>
+              <button
+                className="ModelWindow-button-6"
+                onClick={currentStep !== 4 ?nextStep : ()=>{}}
+                disabled={!!error} // Disable button if there's an error
+              >
+                <img src={nextb} />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     )

@@ -8,7 +8,8 @@ import ShkafGategory from "./ShkafComponents/ShkafGategory";
 import IconsBox from "../IconsBox/IconsBox";
 import CommentsModal from "../CommentsModal/CommentsModal";
 import Footer from "../Footer/Footer";
-import video3 from "../../assets/images/bg-video/GarderobnyeN3.mp4"
+import video3 from "../../assets/images/bg-video/GarderobnyeN3.mp4";
+import CardVideoComponent from "../Module/GarderobnyeModel/CardVideoComponent";
 function Garderobnye() {
   return (
     <>
@@ -33,6 +34,7 @@ function Garderobnye() {
       <div className="genn-SliderImg genn-shkaf-img Prikhozhie ">
         <ShkafGategory />
       </div>
+      <CardVideoComponent />
       <div id="genn-IconsBox" className="genn-IconsBox genn-kitchen-IconsBox">
         <IconsBox />
       </div>
@@ -42,7 +44,7 @@ function Garderobnye() {
       >
         <CommentsModal />
       </div>
-     
+
       <footer className="footer">
         <Footer />
       </footer>

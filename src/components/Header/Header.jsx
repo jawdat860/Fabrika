@@ -18,14 +18,17 @@ import mat_w from "../../assets/images/ico/cont/mat-w.svg";
 import pfone_w from "../../assets/images/ico/cont/pfone-w.svg";
 import process_w from "../../assets/images/ico/cont/process-w.svg";
 
-
 import TopMenu from "./TopMenu/TopMenu";
 import TopMenuButton from "./TopMenu/TopMenuButton";
 import GeneralMenu from "./GeneralMenu/GeneralMenu";
 import LogoTip from "../Module/Logo/LogoTip";
 import { LocalText } from "../LocalText/LocalText";
 import { Link } from "react-router";
-
+import activeMenu1 from "../../assets/images/ico/menu/kuhna-2-b.svg";
+import activeMenu11 from "../../assets/images/ico/menu/skaf-1-b.svg";
+import activeMenu5 from "../../assets/images/ico/menu/prihozaia-2-b.svg";
+import activeMenu6 from "../../assets/images/ico/menu/ico-gard-1-b.svg";
+import activeMenu8 from "../../assets/images/ico/menu/r-zona-2-b.svg";
 function Header() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const closeClass = () => {
@@ -72,6 +75,11 @@ function Header() {
         menu5={menu5}
         menu6={menu6}
         menu8={menu8}
+        activeMenu1={activeMenu1}
+        activeMenu11={activeMenu11}
+        activeMenu5={activeMenu5}
+        activeMenu6={activeMenu6}
+        activeMenu8={activeMenu8}
       />
 
       {/* Sidebar */}

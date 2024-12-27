@@ -1,8 +1,8 @@
-li {
+.genn-AdvantageskitchenBox li {
   position: relative;
 }
 
-li::before {
+.genn-AdvantageskitchenBox li::before {
   content: "";
   width: 5px;
   height: 5px;
@@ -84,7 +84,7 @@ li::before {
   }
   
   @media (min-width: 768px) and (max-width: 1199px) {
-    li::before {
+    .genn-AdvantageskitchenBox  li::before {
 
       left: -10px;
  
@@ -315,7 +315,7 @@ li::before {
     justify-content: center;
     padding-bottom: 24px;
 }
-li::before {
+.genn-AdvantageskitchenBox li::before {
 
   left: -9px;
   

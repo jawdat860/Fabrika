@@ -113,6 +113,19 @@ header {
   align-items: center;
   gap: 48px;
 }
+.genn-Header-2-block-menu img {
+  transition: transform 0.2s ease-in-out; /* Smooth transition */
+}
+
+.genn-Header-2-block-menu.active img {
+  transform: scale(1.1); /* Slight zoom effect for active menu */
+}
+
+.genn-Header-2-block-menu.active .genn-Header-2-block-menu-text {
+  font-weight: bold; /* Bold text for active item */
+  color: var(--header-text-2-hover); /* Color change for active text */
+}
+
 .genn-Header-1-Menu span {
   background: #000;
   width: 30px;

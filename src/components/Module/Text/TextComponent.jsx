@@ -6,7 +6,7 @@ function TextComponent({
   classNamedescription,
 }) {
   return (
-    <div className={classNameTextTitle}>
+    <div className={classNameTextTitle } >
       <div className={classNameTitle}>{title}</div>
       <div className={classNamedescription}>{description}</div>
     </div>
